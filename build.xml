@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+
+<project name="TMM" default="run" basedir=".">
+
+	<property name="build.properties" value="build.properties"/>
+	<property file="${build.properties}"/>
+	<fail message="Define property 'tvbrowser.runtime.dir' in ${build.properties} - this should point to directory containing 'tvbrowser.jar' and 'plugins' directory." unless="tvbrowser.runtime.dir" />
+	<fail message="Define property 'version' in ${build.properties}" unless="version" />
+
+	<property name="src.dir" value="src" />
+	<property name="lib.dir" value="lib" />
+	<property name="build.dir" value="build" />
+	<property name="license.dir" value="licenses" />
+	<property name="classes.dir" value="${build.dir}/classes" />
+	<property name="res.dir" value="res" />
+	<property name="doc.dir" value="${res.dir}/docs"/>
+	<property name="jar.file" value="${tvbrowser.runtime.dir}/plugins/TMM.jar"/>
+
+
+	<target name="compile">
+		<mkdir dir="${classes.dir}" />
+		<javac srcdir="${src.dir}" source="1.7" target="1.7" destdir="${classes.dir}" deprecation="true" debug="true" encoding="utf-8" includeantruntime="false">
+			<compilerarg value="-Xlint:unchecked"/>
+			<classpath>
+				<pathelement location="${tvbrowser.runtime.dir}/tvbrowser.jar" />
+				<pathelement location="${classes.dir}" />
+				<fileset dir="${lib.dir}">
+					<include name="*.jar"/>
+				</fileset>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="jar" depends="compile">
+		<mkdir dir="${classes.dir}/tmm" />
+		<unjar dest="${classes.dir}">
+			<fileset dir="${lib.dir}">
+				<include name="*.jar" />
+			</fileset>
+		</unjar>
+		<copy todir="${classes.dir}/tmm">
+			<fileset dir="${res.dir}/images" includes="*.png" />
+			<fileset dir="${res.dir}/images" includes="*.gif" />
+			<fileset dir="${res.dir}/language" includes="**/*.properties" />
+		</copy>
+		<copy todir="${classes.dir}">
+			<fileset dir="${license.dir}" includes="**/*.*" />
+			<fileset dir="${res.dir}/html" includes="**/*.*" />
+		</copy>
+		<jar destfile="${jar.file}" basedir="${classes.dir}">
+		</jar>
+	</target>
+
+	<target name="run" depends="compile,jar" description="Run TV-Browser">
+		<java jar="${tvbrowser.runtime.dir}/tvbrowser.jar" dir="${tvbrowser.runtime.dir}" fork="true">
+			<jvmarg value="-Djava.util.logging.config.file=${basedir}/logging.properties"/>
+			<jvmarg value="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=7777"/>
+			<!--<jvmarg value="-verbose:class"/>-->
+		</java>
+	</target>
+
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+	</target>
+<!--
+	<target name="release" depends="checklist,jar" description="Make distribution zip">
+		<property name="dist-tmp.dir" value="${build.dir}/dist-tmp"/>
+		<mkdir dir="${dist-tmp.dir}"/>
+
+		<delete>
+			<fileset dir="${build.dir}" includes="*.zip"/>
+		</delete>
+
+		<copy file="${jar.file}" todir="${dist-tmp.dir}/LazyBones-${version}/"/>
+		<copy todir="${dist-tmp.dir}/LazyBones-${version}">
+			<fileset dir="${doc.dir}">
+			</fileset>
+		</copy>
+		<copy todir="${dist-tmp.dir}/LazyBones-${version}/license">
+			<fileset dir="${license.dir}">
+			</fileset>
+		</copy>
+
+		<zip destfile="${build.dir}/LazyBones-${version}.zip" 
+	             basedir="${dist-tmp.dir}"/>
+
+		<delete dir="${dist-tmp.dir}"/>
+	</target>
+
+	<target name="checklist" description="Checklist of things to do before releasing a version.">
+		<!- Make sure that the right java version is used for the build ->
+
+        <input message="Are you using the correct Java version?" validargs="y,n" addproperty="check.java.version" />
+        <condition property="do.abort">
+            <equals arg1="n" arg2="${check.java.version}" />
+        </condition>
+        <fail if="do.abort">Please change your PATH variable.</fail>
+		
+        <!- Make sure the readme and website state the correct TVB dependency ->
+        <input message="Do readme and webiste state the correct TVB version?" validargs="y,n" addproperty="check.tvbversion" />
+        <condition property="do.abort">
+            <equals arg1="n" arg2="${check.tvbversion}" />
+        </condition>
+        <fail if="do.abort">Please edit the README / website.</fail>
+
+        <!- Make sure the changelog has been updated ->
+        <input message="Is the changelog up to date?" validargs="y,n" addproperty="check.changelog" />
+        <condition property="do.abort">
+            <equals arg1="n" arg2="${check.changelog}" />
+        </condition>
+        <fail if="do.abort">Please edit the changelog.</fail>
+		
+		<!- Make sure the plugin version number has been increased ->
+		<input message="Is the plugin version number correct?" validargs="y,n" addproperty="check.version" />
+		<condition property="do.abort">
+			<equals arg1="n" arg2="${check.version}" />
+		</condition>
+		<fail if="do.abort">Please change the version number.</fail>
+
+		<!- Make sure all changes have been checked in ->
+		<input message="All code changes checked into the SCM?" validargs="y,n" addproperty="check.scm" />
+		<condition property="do.abort">
+			<equals arg1="n" arg2="${check.scm}" />
+		</condition>
+		<fail if="do.abort">Code has to be checked in.</fail>
+
+		<!- Make sure the code has a tag in the SCM ->
+        <input message="Did you tag the current revision?" validargs="y,n" addproperty="check.scm.tag" />
+        <condition property="do.abort">
+            <equals arg1="n" arg2="${check.scm.tag}" />
+        </condition>
+        <fail if="do.abort">Please tag the revision.</fail>
+	</target>
+                -->
+</project>

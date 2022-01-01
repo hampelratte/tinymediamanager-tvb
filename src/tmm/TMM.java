@@ -28,6 +28,17 @@
  */
 package tmm;
 
+import devplugin.*;
+import org.h2.mvstore.MVMap;
+import org.h2.mvstore.MVStore;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import tmm.gui.HitDialog;
+import tmm.gui.TMMSettingsPanel;
+import util.ui.UiUtilities;
+
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,39 +47,19 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.Icon;
-import javax.swing.JOptionPane;
-
-import org.h2.mvstore.MVMap;
-import org.h2.mvstore.MVStore;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import devplugin.ActionMenu;
-import devplugin.Plugin;
-import devplugin.PluginInfo;
-import devplugin.Program;
-import devplugin.SettingsTab;
-import devplugin.Version;
-import tmm.gui.HitDialog;
-import tmm.gui.TMMSettingsPanel;
-import util.ui.UiUtilities;
-
 /**
  * Integrates the TMM database into TV-Browser
  *
  * @author <a href="hampelratte@users.sf.net">hampelratte@users.sf.net</a>
- *
  */
 public class TMM extends Plugin {
 
-    private static transient Logger logger = LoggerFactory.getLogger(TMM.class);
+    private static final Logger logger = LoggerFactory.getLogger(TMM.class);
 
-    /** Translator */
-    private static final util.ui.Localizer mLocalizer = util.ui.Localizer.getLocalizerFor(TMM.class);
+    /**
+     * Translator
+     */
+    private static final util.i18n.Localizer mLocalizer = util.i18n.Localizer.getLocalizerFor(TMM.class);
 
     private Properties settings;
 
@@ -104,24 +95,23 @@ public class TMM extends Plugin {
     }
 
     private List<Movie> parseMovies(List<String> movieMarkups) {
-        List<Movie> movies = new ArrayList<Movie>();
+        List<Movie> parsedMovies = new ArrayList<>();
         for (String markup : movieMarkups) {
             JSONObject json = new JSONObject(markup);
-            // logger.info(json.toString(2));
             try {
                 Movie movie = MovieParser.parse(json);
-                movies.add(movie);
+                parsedMovies.add(movie);
             } catch (Exception e) {
                 logger.error("Couldn't parse movie:\n" + json, e);
             }
         }
-        return movies;
+        return parsedMovies;
     }
 
     private List<String> loadMoviesFromDatabase(File movieDatabaseFile) {
         MVStore s = MVStore.open(movieDatabaseFile.getAbsolutePath());
         MVMap<Integer, String> map = s.openMap("movies");
-        List<String> markups = new ArrayList<String>();
+        List<String> markups = new ArrayList<>();
         for (Entry<Integer, String> entry : map.entrySet()) {
             String value = entry.getValue();
             markups.add(value);
@@ -180,7 +170,7 @@ public class TMM extends Plugin {
 
                 String title = program.getTitle();
                 logger.info("Searching [{}] in TMM DB", title);
-                List<Movie> hits = new ArrayList<Movie>();
+                List<Movie> hits = new ArrayList<>();
                 for (Movie movie : movies) {
                     int percentageOfEquality = StringUtils.percentageOfEquality(title, movie.title);
                     if (percentageOfEquality > searchThreshold) {
@@ -235,17 +225,5 @@ public class TMM extends Plugin {
 
     public static String getTranslation(String key, String altText) {
         return mLocalizer.msg(key, altText);
-    }
-
-    public static String getTranslation(String key, String altText, String arg1) {
-        return mLocalizer.msg(key, altText, arg1);
-    }
-
-    public static String getTranslation(String key, String altText, String arg1, String arg2) {
-        return mLocalizer.msg(key, altText, arg1, arg2);
-    }
-
-    public static String getTranslation(String key, String altText, String arg1, String arg2, String arg3) {
-        return mLocalizer.msg(key, altText, arg1, arg2, arg3);
     }
 }

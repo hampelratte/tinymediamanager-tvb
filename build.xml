@@ -19,7 +19,7 @@
 
 	<target name="compile">
 		<mkdir dir="${classes.dir}" />
-		<javac srcdir="${src.dir}" source="1.7" target="1.7" destdir="${classes.dir}" deprecation="true" debug="true" encoding="utf-8" includeantruntime="false">
+		<javac srcdir="${src.dir}" source="17" target="17" destdir="${classes.dir}" deprecation="true" debug="true" encoding="utf-8" includeantruntime="false">
 			<compilerarg value="-Xlint:unchecked"/>
 			<classpath>
 				<pathelement location="${tvbrowser.runtime.dir}/tvbrowser.jar" />
